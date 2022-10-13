@@ -18,8 +18,6 @@ struct sWords *getNewWord(char *in_word){
     newWord->nextInLine = NULL;
     newWord->word = NULL;
     newWord->word = strdup(in_word);
-    //newWord->word = malloc(sizeof(strcpy(newWord->word, in_word)));
-    //strcpy(newWord->word, in_word);
     newWord->frequency = 1;
   } else {printf("Memory allocation failure\n");}
   return newWord;
@@ -29,7 +27,7 @@ void printWord(const struct sWords *SWord, const char *comment)
 {
   if (!SWord){
     printf("%s is NULL\n", comment);
-  } else{
+  } else {
     printf("%s: word:%s frequency:%ld\n",
       comment, SWord->word, SWord->frequency);
   }
@@ -96,7 +94,6 @@ bool CheckForDuplicates(struct sWords *list, char *word_in)
   return dup_flag;
 }
 
-
 int main(){
   //Initializing some variables
   int i, j, l, baa;
@@ -144,6 +141,8 @@ int main(){
     {
       if (buffer[i] != ' '){
         buffer[i] = tolower(buffer[i]);
+        if (buffer[i] == 0xC4)
+          printf("Test");
         strncat(placeholder_string, &buffer[i], 1);
       } 
       else {
@@ -167,7 +166,6 @@ int main(){
         }
       }
     }
-    //if ((char)*placeholder_string == ((char)0x00))
     if ((long)*placeholder_string == (long)0x00)
       added->nextInLine = getNewWord(placeholder_string);
       if (added->nextInLine != NULL)

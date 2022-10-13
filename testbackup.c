@@ -3,10 +3,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <locale.h>
 
 struct sWords {
   char *word;
-  int frequency;
+  long frequency;
   struct sWords *nextInLine;
 };
 
@@ -16,8 +17,7 @@ struct sWords *getNewWord(char *in_word){
   if (newWord != NULL){
     newWord->nextInLine = NULL;
     newWord->word = NULL;
-    newWord->word = malloc(sizeof(in_word));
-    strcpy(newWord->word, in_word);
+    newWord->word = strdup(in_word);
     newWord->frequency = 1;
   } else {printf("Memory allocation failure\n");}
   return newWord;
@@ -27,8 +27,8 @@ void printWord(const struct sWords *SWord, const char *comment)
 {
   if (!SWord){
     printf("%s is NULL\n", comment);
-  } else{
-    printf("%s: word:%s frequency:%i\n",
+  } else {
+    printf("%s: word:%s frequency:%ld\n",
       comment, SWord->word, SWord->frequency);
   }
 }
@@ -54,13 +54,12 @@ void printList(const struct sWords *list)
 void writeList(const struct sWords *list)
 {
   const struct sWords *t;
-  int foo;
   t = list;
 
   FILE *fout = fopen("testout.csv", "w");
   while (t)
   {
-    fprintf(fout, "[%s,%i],\n", t->word, t->frequency);
+    fprintf(fout, "[%s,%ld],\n", t->word, t->frequency);
     t = t->nextInLine;
   }
   fclose(fout);
@@ -95,14 +94,12 @@ bool CheckForDuplicates(struct sWords *list, char *word_in)
   return dup_flag;
 }
 
-
 int main(){
   //Initializing some variables
-  int i, j, l, baa; //dup_flag
-  //dup_flag = 0;
+  int i, j, l, baa;
 
-//defining acceptable characters
-  
+  setlocale(LC_CTYPE, "");
+
   char *buffer = 0;
   long length;
 
@@ -110,10 +107,9 @@ int main(){
   char placeholder_string[50], incoming_word[50];
   struct sWords *first = NULL;
   struct sWords *added = NULL;
-  //struct sWords *temp_iter = NULL;
 
   //fileopen
-  FILE *f = fopen("texttest.txt", "rb");
+  FILE *f = fopen("sv.txt", "r");
 
   //fileprocessing
   if (f){
@@ -132,7 +128,7 @@ int main(){
   if (buffer){
     for(i = 0; buffer[i] != '\0'; ++i)
     {
-      if (isalnum(buffer[i]) != 8 && (buffer[i] >= '!' && buffer[i] <= '/' && (char)buffer[i] != (char)0x08)){
+      if (isalnum(buffer[i]) != 8 && (buffer[i] >= '!' && buffer[i] <= '/' && buffer[i] != '\n' && (char)buffer[i] != (char)0x08)){
         for(j = i; buffer[j] != '\0'; ++j)
         {
             buffer[j] = buffer[j+1];
@@ -140,16 +136,17 @@ int main(){
         buffer[j] = '\0'; 
       }
   }
-
-    
+    printf("%ld\n", strlen(buffer));
     for(i=0; buffer[i] != '\0'; ++i)
     {
       if (buffer[i] != ' '){
         buffer[i] = tolower(buffer[i]);
+        if (buffer[i] == 0xC4)
+          printf("Test");
         strncat(placeholder_string, &buffer[i], 1);
       } 
       else {
-        if (*placeholder_string != (char)0x00){
+        if (placeholder_string != (char)0x00){
           if (first==NULL){
             first = getNewWord(placeholder_string);
             if (first != NULL){
@@ -169,14 +166,12 @@ int main(){
         }
       }
     }
-    //if ((char)*placeholder_string == ((char)0x00))
     if ((long)*placeholder_string == (long)0x00)
       added->nextInLine = getNewWord(placeholder_string);
       if (added->nextInLine != NULL)
         added = added->nextInLine;
     memset(placeholder_string, 0, strlen(placeholder_string));
 
-  printList(first);
   writeList(first);
   CleanUp(first);
   first = NULL;
