@@ -3,10 +3,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <locale.h>
 
 struct sWords {
   char *word;
-  int frequency;
+  long frequency;
   struct sWords *nextInLine;
 };
 
@@ -16,8 +17,9 @@ struct sWords *getNewWord(char *in_word){
   if (newWord != NULL){
     newWord->nextInLine = NULL;
     newWord->word = NULL;
-    newWord->word = malloc(sizeof(&in_word));
-    strcpy(newWord->word, in_word);
+    newWord->word = strdup(in_word);
+    //newWord->word = malloc(sizeof(strcpy(newWord->word, in_word)));
+    //strcpy(newWord->word, in_word);
     newWord->frequency = 1;
   } else {printf("Memory allocation failure\n");}
   return newWord;
@@ -28,7 +30,7 @@ void printWord(const struct sWords *SWord, const char *comment)
   if (!SWord){
     printf("%s is NULL\n", comment);
   } else{
-    printf("%s: word:%s frequency:%i\n",
+    printf("%s: word:%s frequency:%ld\n",
       comment, SWord->word, SWord->frequency);
   }
 }
@@ -54,13 +56,12 @@ void printList(const struct sWords *list)
 void writeList(const struct sWords *list)
 {
   const struct sWords *t;
-  int foo;
   t = list;
 
   FILE *fout = fopen("testout.csv", "w");
   while (t)
   {
-    fprintf(fout, "[%s,%i],\n", t->word, t->frequency);
+    fprintf(fout, "[%s,%ld],\n", t->word, t->frequency);
     t = t->nextInLine;
   }
   fclose(fout);
@@ -99,7 +100,9 @@ bool CheckForDuplicates(struct sWords *list, char *word_in)
 int main(){
   //Initializing some variables
   int i, j, l, baa;
-  
+
+  setlocale(LC_CTYPE, "");
+
   char *buffer = 0;
   long length;
 
