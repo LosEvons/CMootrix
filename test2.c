@@ -94,6 +94,30 @@ bool CheckForDuplicates(struct sWords *list, char *word_in)
   return dup_flag;
 }
 
+void strip_extra_spaces(char* s) {
+  int i, x;
+  for (i=x=0; s[i]; ++i)
+    if (!isspace(s[i]) || (i > 0 && !isspace(s[i-1])))
+      s[x++] = s[i];
+  s[x] = '\0';
+}
+
+void nordic_to_lower(char* s) {
+  int i;
+  for (i=0; s[i]; ++i)
+    if ((char)s[i] == (char)0xC3 && (char)s[i+1] == (char)0x84)
+      s[i+1] = (char)0xA4;
+    else if ((char)s[i] == (char)0xC3 && (char)s[i+1] == (char)0x96)
+      s[i+1] = (char)0xB6;
+}
+
+void remove_unwanted_characters(char* s) {
+  int i;
+  for(i=0; s[i]; ++i)
+    if ((char)s[i] == (char)0xC2 && (char)s[i+1] == (char)0xBB) 
+      {s[i] = (char)0x20; s[i + 1] = (char)0x20;}
+}
+
 int main(){
   //Initializing some variables
   int i, j, l, baa;
@@ -121,14 +145,19 @@ int main(){
       fread(buffer, 1, length, f);
     }
     fclose(f);
-    buffer[length] = '\0';
+    buffer[length] = ' ';
+    buffer[length + 1] = '\0';
   }
 
   //content processing
+  remove_unwanted_characters(buffer);
+  strip_extra_spaces(buffer);
+  nordic_to_lower(buffer);
+
   if (buffer){
     for(i = 0; buffer[i] != '\0'; ++i)
     {
-      if (isalnum(buffer[i]) != 8 && (buffer[i] >= '!' && buffer[i] <= '/' && buffer[i] != '\n' && (char)buffer[i] != (char)0x08)){
+      if (isalnum(buffer[i]) != 8 && ispunct(buffer[i]) != 0){
         for(j = i; buffer[j] != '\0'; ++j)
         {
             buffer[j] = buffer[j+1];
@@ -139,14 +168,12 @@ int main(){
     printf("%ld\n", strlen(buffer));
     for(i=0; buffer[i] != '\0'; ++i)
     {
-      if (buffer[i] != ' '){
+      if (buffer[i] != ' ' && iscntrl(buffer[i]) == 0){
         buffer[i] = tolower(buffer[i]);
-        if (buffer[i] == 0xC4)
-          printf("Test");
         strncat(placeholder_string, &buffer[i], 1);
       } 
       else {
-        if (placeholder_string != (char)0x00){
+        if (strlen(placeholder_string) > 0 || placeholder_string != " "){
           if (first==NULL){
             first = getNewWord(placeholder_string);
             if (first != NULL){
@@ -166,12 +193,6 @@ int main(){
         }
       }
     }
-    if ((long)*placeholder_string == (long)0x00)
-      added->nextInLine = getNewWord(placeholder_string);
-      if (added->nextInLine != NULL)
-        added = added->nextInLine;
-    memset(placeholder_string, 0, strlen(placeholder_string));
-
   writeList(first);
   CleanUp(first);
   first = NULL;
